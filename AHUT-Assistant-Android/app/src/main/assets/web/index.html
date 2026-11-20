@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#5b5bd6" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>AHUT 校园助手</title>
+<link rel="manifest" href="/manifest.webmanifest" />
+<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ 登录页 ============ -->
+  <section id="login-view" class="login hidden">
+    <div class="login-orb orb-a"></div>
+    <div class="login-orb orb-b"></div>
+    <div class="login-card">
+      <div class="brand">
+        <div class="brand-logo">AHUT</div>
+        <div>
+          <h1>校园助手</h1>
+          <p>安徽工业大学 · 课表成绩一手掌握</p>
+        </div>
+      </div>
+
+      <div id="login-hint" class="login-hint hidden"></div>
+
+      <form id="login-form" autocomplete="on">
+        <label class="field">
+          <span>学号</span>
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/></svg>
+            <input id="username" name="username" type="text" inputmode="numeric" placeholder="请输入学号" autocomplete="username" />
+          </div>
+        </label>
+        <label class="field">
+          <span>智慧校园密码</span>
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24"><path d="M17 9V7a5 5 0 0 0-10 0v2H5v12h14V9h-2zM9 7a3 3 0 0 1 6 0v2H9V7zm4 8.7V19h-2v-3.3a2 2 0 1 1 2 0z"/></svg>
+            <input id="password" name="password" type="password" placeholder="统一身份认证密码" autocomplete="current-password" />
+          </div>
+        </label>
+        <label class="field" id="captcha-field">
+          <span>验证码</span>
+          <div class="captcha-row">
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3zm0 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm1-8h-2v4h2V9zm0 5h-2v2h2v-2z"/></svg>
+              <input id="captcha" name="captcha" type="text" placeholder="看图输入" autocomplete="off" maxlength="8" />
+            </div>
+            <img id="captcha-img" alt="验证码" title="点击刷新" />
+          </div>
+        </label>
+
+        <details id="jwxt-pwd-wrap" class="advanced">
+          <summary>教务系统密码不同？点此单独填写</summary>
+          <label class="field">
+            <span>教务密码</span>
+            <input id="jwxt-password" type="password" placeholder="留空则与智慧校园密码相同" autocomplete="off" />
+          </label>
+        </details>
+
+        <label class="check">
+          <input id="remember" type="checkbox" />
+          <span>记住密码（仅加密保存在本机）</span>
+        </label>
+
+        <button id="login-btn" class="primary" type="submit">登 录</button>
+        <button id="qr-btn" class="ghost" type="button">微信扫码登录</button>
+
+        <div id="qr-panel" class="qr-panel hidden">
+          <img id="qr-img" alt="微信登录二维码" />
+          <p id="qr-tip">请用微信「扫一扫」确认登录</p>
+          <button id="qr-refresh" class="link-btn" type="button">刷新二维码</button>
+        </div>
+
+        <p class="hint">校外会自动经学校 WebVPN 访问教务系统，请保持网络畅通。</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ 主界面 ============ -->
+  <section id="main-view" class="main hidden">
+    <header class="hero">
+      <div class="hero-deco deco-a"></div>
+      <div class="hero-deco deco-b"></div>
+      <div class="hero-top">
+        <button id="avatar-btn" class="avatar-btn" title="编辑头像和昵称">
+          <div class="avatar js-avatar" id="avatar">同</div>
+          <span class="avatar-edit"><svg viewBox="0 0 24 24"><path d="M3 17.2V21h3.8L17 10.8 13.2 7 3 17.2zM20.7 7.3a1 1 0 0 0 0-1.4l-2.6-2.6a1 1 0 0 0-1.4 0l-1.8 1.8 4 4 1.8-1.8z"/></svg></span>
+        </button>
+        <div class="hero-info">
+          <div class="hello" id="hello">同学，你好</div>
+          <div class="sub" id="sub-line">第 1 周</div>
+        </div>
+        <button id="refresh-btn" class="icon-btn glass" title="刷新数据">
+          <svg viewBox="0 0 24 24"><path d="M17.6 6.4A8 8 0 1 0 20 12h-2a6 6 0 1 1-1.8-4.3L13 11h6V5l-1.4 1.4z"/></svg>
+        </button>
+      </div>
+      <div class="hero-progress">
+        <div class="progress-head">
+          <span>学期进度</span>
+          <span><b id="week-now">1</b> / <span id="week-total">20</span> 周</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="week-progress"></div></div>
+      </div>
+    </header>
+
+    <div id="banner" class="banner hidden"></div>
+
+    <!-- 首页 -->
+    <div class="page" id="page-home">
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-icon mint"><svg viewBox="0 0 24 24"><path d="M7 2v3H4v15h16V5h-3V2h-2v3H9V2H7zM6 10h12v8H6v-8z"/></svg></span>
+            <span class="stat-label">今日课程</span>
+          </div>
+          <div class="stat-value"><span id="today-count">0</span><small>节</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-icon violet"><svg viewBox="0 0 24 24"><path d="M4 3h16v18H4V3zm3 3v2h10V6H7zm0 4v2h10v-2H7zm0 4v2h6v-2H7z"/></svg></span>
+            <span class="stat-label">平均绩点</span>
+          </div>
+          <div class="stat-value"><span id="gpa">-</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-icon amber"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 5v5.6l4.2 2.5-.8 1.3L11 13V7h2z"/></svg></span>
+            <span class="stat-label">待考考试</span>
+          </div>
+          <div class="stat-value"><span id="exam-stat">0</span><small>场</small></div>
+        </div>
+      </div>
+
+      <div class="card next-card" id="next-course-card">
+        <div class="card-head"><h2>下一节课</h2><span class="tag" id="next-tag"></span></div>
+        <div id="next-course" class="next-course empty">暂无待上课程</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>今日课程</h2><span class="muted" id="today-date"></span></div>
+        <div id="today-list" class="timeline"></div>
+      </div>
+
+      <div class="card" id="exam-card">
+        <div class="card-head"><h2>考试安排</h2><span class="muted" id="exam-count"></span></div>
+        <div id="exam-mini" class="exam-mini"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>快捷入口</h2><span class="muted">常用服务</span></div>
+        <div class="quick-grid">
+          <a class="quick-item" href="https://jwxt.ahut.edu.cn" target="_blank" rel="noreferrer">
+            <span class="quick-icon q-blue"><svg viewBox="0 0 24 24"><path d="M4 3h16v18H4V3zm3 3v2h10V6H7zm0 4v2h10v-2H7zm0 4v2h6v-2H7z"/></svg></span>
+            <span>教务系统</span>
+          </a>
+          <a class="quick-item" href="https://webvpn.ahut.edu.cn" target="_blank" rel="noreferrer">
+            <span class="quick-icon q-violet"><svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3z"/></svg></span>
+            <span>WebVPN</span>
+          </a>
+          <a class="quick-item" href="https://www.ahut.edu.cn" target="_blank" rel="noreferrer">
+            <span class="quick-icon q-mint"><svg viewBox="0 0 24 24"><path d="M12 3 2 9h3v11h5v-6h4v6h5V9h3L12 3z"/></svg></span>
+            <span>学校官网</span>
+          </a>
+          <a class="quick-item" href="https://lib.ahut.edu.cn" target="_blank" rel="noreferrer">
+            <span class="quick-icon q-amber"><svg viewBox="0 0 24 24"><path d="M4 4h7v16H4V4zm9 0h7v16h-7V4z"/></svg></span>
+            <span>图书馆</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>通知公告</h2><button class="link" data-goto="more">全部</button></div>
+        <div id="notice-list" class="notice-list"></div>
+      </div>
+    </div>
+
+    <!-- 课表 -->
+    <div class="page hidden" id="page-timetable">
+      <div class="week-bar">
+        <button id="week-prev" class="icon-btn"><svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg></button>
+        <div class="week-title">第 <span id="view-week">1</span> 周</div>
+        <button id="week-next" class="icon-btn"><svg viewBox="0 0 24 24"><path d="m8.6 16.6 1.4 1.4 6-6-6-6-1.4 1.4L13.2 12z"/></svg></button>
+      </div>
+      <div id="tt-grid" class="tt-grid"></div>
+      <div id="tt-day" class="tt-day"></div>
+    </div>
+
+    <!-- 成绩 -->
+    <div class="page hidden" id="page-grades">
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-label">平均绩点</span></div>
+          <div class="stat-value"><span id="g-gpa">-</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-label">加权平均分</span></div>
+          <div class="stat-value"><span id="g-avg">-</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-label">已修学分</span></div>
+          <div class="stat-value"><span id="g-credit">-</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>成绩明细</h2><span class="muted" id="g-count"></span></div>
+        <div class="search-box">
+          <svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 1 0 3.5 10.9l4.3 4.3 1.4-1.4-4.3-4.3A6 6 0 0 0 10 4zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/></svg>
+          <input id="grade-search" type="search" placeholder="搜索课程名称" autocomplete="off" />
+        </div>
+        <div class="filter-row" id="grade-filters">
+          <button class="chip active" data-filter="all">全部</button>
+          <button class="chip" data-filter="pass">已通过</button>
+          <button class="chip" data-filter="fail">未通过</button>
+          <button class="chip" data-filter="high">90+</button>
+        </div>
+        <div id="grade-list" class="grade-list"></div>
+      </div>
+    </div>
+
+    <!-- 考试 -->
+    <div class="page hidden" id="page-exams">
+      <div class="card">
+        <div class="card-head"><h2>考试安排</h2><span class="muted" id="e-count"></span></div>
+        <div id="exam-list" class="exam-list"></div>
+      </div>
+    </div>
+
+    <!-- 更多 -->
+    <div class="page hidden" id="page-more">
+      <div class="card account-card">
+        <div class="account-main">
+          <div class="avatar account-avatar js-avatar" id="avatar-more">同</div>
+          <div class="account-info">
+            <div class="account-name" id="account-name">同学</div>
+            <div class="account-id" id="account-id">未登录</div>
+          </div>
+          <button id="profile-open" class="pill-btn">编辑资料</button>
+        </div>
+        <div class="menu">
+          <button class="menu-item" id="switch-account-btn">
+            <span class="menu-icon"><svg viewBox="0 0 24 24"><path d="M7 7h9V4l5 4.5L16 13v-3H7a3 3 0 0 0 0 6h2v2H7A5 5 0 0 1 7 7zm10 10H8v3l-5-4.5L8 11v3h9a3 3 0 0 0 0-6h-2V6h2a5 5 0 0 1 0 10z"/></svg></span>
+            <span class="menu-text">切换账号</span>
+            <span class="chevron">›</span>
+          </button>
+          <button class="menu-item" id="logout-btn">
+            <span class="menu-icon danger"><svg viewBox="0 0 24 24"><path d="M10 3H4v18h6v-2H6V5h4V3zm5.6 4.6L14.2 9l2 2H8v2h8.2l-2 2 1.4 1.4L20 12l-4.4-4.4z"/></svg></span>
+            <span class="menu-text">退出登录</span>
+            <span class="chevron">›</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="card" id="install-card">
+        <div class="card-head"><h2>安装到手机</h2></div>
+        <p class="muted small-text" id="install-desc">把校园助手添加到桌面，像 App 一样全屏打开。</p>
+        <button id="install-btn" class="ghost">添加到主屏幕</button>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>通知公告</h2></div>
+        <div id="notice-full" class="notice-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>学年校历</h2></div>
+        <div id="calendar-list" class="notice-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>学期设置</h2></div>
+        <label class="field small">
+          <span>开学第一周周一</span>
+          <input id="term-start" type="date" />
+        </label>
+        <label class="field small">
+          <span>学期总周数</span>
+          <input id="total-weeks" type="number" min="1" max="30" value="20" />
+        </label>
+        <button id="save-settings" class="primary small">保存设置</button>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>诊断</h2></div>
+        <p class="muted small-text">数据解析异常时，可导出诊断包（保存在本机数据目录），便于排查适配问题。</p>
+        <button id="diag-btn" class="ghost">导出诊断包</button>
+      </div>
+
+      <p class="foot-note">本工具仅在本地运行，账号密码不会上传到任何第三方服务器。</p>
+    </div>
+
+    <nav class="tabbar">
+      <button class="tab active" data-tab="home">
+        <svg viewBox="0 0 24 24"><path d="M12 3 2 12h3v8h6v-5h2v5h6v-8h3z"/></svg><span>首页</span>
+      </button>
+      <button class="tab" data-tab="timetable">
+        <svg viewBox="0 0 24 24"><path d="M7 2v3H4v15h16V5h-3V2h-2v3H9V2H7zm-1 8h12v8H6v-8z"/></svg><span>课表</span>
+      </button>
+      <button class="tab" data-tab="grades">
+        <svg viewBox="0 0 24 24"><path d="M4 3h16v18H4V3zm3 3v2h10V6H7zm0 4v2h10v-2H7zm0 4v2h6v-2H7z"/></svg><span>成绩</span>
+      </button>
+      <button class="tab" data-tab="exams">
+        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 5v5.6l4.2 2.5-.8 1.3L11 13V7h2z"/></svg><span>考试</span>
+      </button>
+      <button class="tab" data-tab="more">
+        <svg viewBox="0 0 24 24"><path d="M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg><span>更多</span>
+      </button>
+    </nav>
+  </section>
+
+  <!-- ============ 个人资料弹窗 ============ -->
+  <div id="profile-modal" class="modal hidden">
+    <div class="modal-mask" data-close-profile></div>
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h2>个人资料</h2>
+        <button class="close-btn" data-close-profile aria-label="关闭">×</button>
+      </div>
+
+      <div class="avatar-editor">
+        <button id="avatar-edit" class="avatar avatar-lg js-avatar" title="点击更换头像">同</button>
+        <div class="avatar-actions">
+          <button id="avatar-upload-btn" class="pill-btn">上传新头像</button>
+          <button id="avatar-reset" class="link-btn">恢复默认</button>
+        </div>
+        <input id="avatar-file" type="file" accept="image/*" hidden />
+      </div>
+
+      <label class="field">
+        <span>昵称</span>
+        <input id="nickname-input" type="text" maxlength="12" placeholder="给自己起个昵称（最多 12 个字）" />
+      </label>
+
+      <button id="profile-save" class="primary">保存资料</button>
+      <p class="hint center">头像和昵称只保存在当前浏览器，不会上传。</p>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <div id="loading" class="loading hidden"><div class="spinner"></div></div>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>

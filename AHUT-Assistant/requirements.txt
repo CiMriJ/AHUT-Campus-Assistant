@@ -1,0 +1,6 @@
+requests>=2.31
+beautifulsoup4>=4.12
+lxml>=4.9
+pycryptodome>=3.19
+cryptography>=41.0
+flask>=2.3

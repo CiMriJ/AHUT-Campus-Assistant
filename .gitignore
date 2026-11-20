@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Android / Gradle 构建产物
+AHUT-Assistant-Android/.gradle/
+AHUT-Assistant-Android/.idea/
+AHUT-Assistant-Android/build/
+AHUT-Assistant-Android/app/build/
+AHUT-Assistant-Android/local.properties
+
+# 本地产物
+*.apk
+*.zip
+.screenshots/
+
+# 系统文件
+.DS_Store
+Thumbs.db
